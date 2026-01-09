@@ -171,7 +171,8 @@ function createSystemPrompt(): string {
     '6. Use Composite.add(world, [bodies]) to add objects to the world\n' +
     '7. Make it colorful using template literals: render: { fillStyle: `hsl(${hue}, 70%, 60%)` }\n' +
     '8. Vary sizes, positions, and velocities for visual interest\n' +
-    '9. Use realistic physics: restitution 0.85-0.95\n\n' +
+    '9. Use realistic physics: restitution 0.85-0.95\n' +
+    '10. RULE: You MUST assign meaningful label properties to bodies (e.g., label: \'wheel\', label: \'chassis\'). Do not leave them as default \'Body\'.\n\n' +
     'EXAMPLE OUTPUT (starts directly with code, no preamble):\n\n' +
     'const balls = [];\n' +
     'for (let i = 0; i < 40; i++) {\n' +
@@ -183,6 +184,7 @@ function createSystemPrompt(): string {
     '    {\n' +
     '      restitution: 0.92,\n' +
     '      friction: 0.05,\n' +
+    '      label: `ball-${i}`,\n' +
     '      render: { fillStyle: `hsl(${i * 9}, 75%, 60%)` }\n' +
     '    }\n' +
     '  ));\n' +

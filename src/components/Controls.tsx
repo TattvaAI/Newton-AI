@@ -142,7 +142,7 @@ export function Controls({
     const bodies = Matter.Composite.allBodies(engine.world);
     bodies.forEach(body => {
       if (!body.isStatic) {
-        body.angularVelocity *= (1 - angularDamping);
+        Matter.Body.setAngularVelocity(body, body.angularVelocity * (1 - angularDamping));
       }
     });
   }, [angularDamping, engine]);

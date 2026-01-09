@@ -41,3 +41,7 @@ Thumbs.db
 
 # Debug files
 *.tsbuildinfo
+
+# Duplicate/backup folders
+newton-ai/
+newton-ai-1/

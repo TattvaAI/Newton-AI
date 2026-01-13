@@ -1,41 +1,31 @@
-# 🌌 Newton-AI: Generative Physics Lab
+# 🌟 Newton-AI
 
-**AI-Powered Physics Simulation Playground**
+> AI-powered physics simulation playground using Google Gemini and Matter.js
 
-Transform natural language into real-time 2D physics simulations. Powered by Google Gemini 3 AI and Matter.js, Newton-AI lets you create, experiment, and explore physics concepts through simple text prompts.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TattvaAI/Newton-AI&env=VITE_GEMINI_API_KEY)
-
----
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/React-19.2-61DAFB.svg" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6.svg" alt="TypeScript">
+</p>
 
 ## ✨ Features
 
-### 🤖 AI-Powered Generation
-- **Gemini 3 Pro**: Highest quality physics code generation (150 requests/day)
-- **Gemini 3 Flash**: Fast generation with higher rate limits (1,000 requests/day)
-- **Self-Healing**: Automatic error detection and code correction
-- **Natural Language**: Describe physics experiments in plain English
-
-### ⚛️ Advanced Physics
-- **Matter.js Engine**: Production-grade 2D physics simulation
-- **Real-time Rendering**: Smooth 60 FPS animations
-- **Interactive**: Drag and manipulate objects with mouse
-- **Bounded World**: Automatic wall creation and resize handling
-
-### 🎨 Professional UI
-- **Cyberpunk Aesthetic**: Sleek dark theme with cyan accents
-- **Real-time HUD**: Live FPS, object count, and system stats
-- **Toast Notifications**: User feedback for all operations
-- **Keyboard Shortcuts**: Quick access to common actions
-
----
+🤖 **AI-Powered Generation** - Describe physics scenarios in natural language, watch AI create them  
+⚡ **Real-time Physics** - Powered by Matter.js for accurate 2D physics simulation  
+📊 **Live Measurements** - Track velocity, acceleration, energy, and momentum in real-time  
+🎓 **Educational Tools** - Object inspector, physics dashboard, and interactive controls  
+💾 **Save & Load** - Save your favorite simulations to local storage  
+🎨 **Modern UI** - Built with React 19, TailwindCSS, and Radix UI components  
+📈 **Visualization** - Beautiful charts and graphs using Recharts  
+🧪 **Well-Tested** - Comprehensive test suite with Vitest  
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- A Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+- Node.js 18+ or pnpm 8+
+- Google Gemini API key ([Get one here](https://aistudio.google.com/app/apikey))
 
 ### Installation
 
@@ -45,92 +35,168 @@ git clone https://github.com/TattvaAI/Newton-AI.git
 cd Newton-AI
 
 # Install dependencies
-npm install
+pnpm install
 
 # Create environment file
 cp .env.example .env
 
 # Add your Gemini API key to .env
-# VITE_GEMINI_API_KEY=your_key_here
-
-# Start development server
-npm run dev
+# VITE_GEMINI_API_KEY=your_api_key_here
 ```
 
-Visit `http://localhost:5173` and start creating!
+### Running the App
 
----
+```bash
+# Start development server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Preview production build
+pnpm preview
+
+# Run tests
+pnpm test
+
+# Run tests with UI
+pnpm test:ui
+```
+
+Open [http://localhost:5173](http://localhost:5173) to view the app.
 
 ## 🎮 Usage
 
-### Creating Simulations
+1. **Enter a prompt** describing your physics scenario:
+   - "Create a bouncing ball"
+   - "Two objects colliding at different speeds"
+   - "A pendulum swinging back and forth"
 
-Simply type what you want to see:
-- "create bouncing balls"
-- "stack of falling boxes"  
-- "pendulum with chains"
-- "solar system simulation"
-- "Newton's cradle"
+2. **Watch AI generate** the physics simulation in real-time
 
-Press **Enter** or click **Generate** to watch AI bring it to life!
+3. **Interact with controls**:
+   - ⏯️ Play/Pause simulation
+   - 🔄 Reset to initial state
+   - 🗑️ Clear all objects
+   - 💾 Save simulation
+   - 📊 Toggle physics dashboard
 
-### Keyboard Shortcuts
+4. **Inspect objects** - Click on any object to view its properties
 
-| Key | Action |
-|-----|--------|
-| `Space` | Pause/Play simulation |
-| `R` | Reset world (clear all objects) |
-| `D` | Toggle debug wireframe mode |
+5. **Analyze physics** - Open the dashboard to see real-time measurements
 
-### Model Selection
+## 🏗️ Project Structure
 
-Toggle between AI models in the top-right:
-- **PRO**: Best quality, complex physics (150/day limit)
-- **FLASH**: Fast generation, simple experiments (1,000/day limit)
+```
+src/
+├── components/       # React components
+│   ├── ui/          # Reusable UI components (Radix)
+│   └── controls/    # Simulation controls
+├── features/        # Feature modules
+│   ├── education/   # Educational tools
+│   ├── export/      # Export functionality
+│   └── measurements/# Physics measurements
+├── hooks/           # Custom React hooks
+├── lib/            # Core libraries
+│   ├── ai/         # AI integration (Gemini)
+│   ├── calculations/# Physics calculations
+│   └── physics.ts  # Matter.js wrapper
+├── types/          # TypeScript types
+└── constants/      # App constants
+```
 
----
+## 🧪 Tech Stack
 
-## 🚢 Deployment
+**Frontend Framework**
+- React 19.2 with TypeScript
+- Vite 7.2 for blazing-fast builds
 
-### Deploy to Vercel (Recommended)
+**Physics Engine**
+- Matter.js 0.20 - 2D physics simulation
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TattvaAI/Newton-AI&env=VITE_GEMINI_API_KEY)
+**AI Integration**
+- Google Generative AI (Gemini Flash)
 
-1. Click the button above
-2. Add your `VITE_GEMINI_API_KEY`
-3. Deploy!
+**UI Components**
+- TailwindCSS 4.1 for styling
+- Radix UI for accessible components
+- Lucide React for icons
+- Recharts for data visualization
 
-See [DEPLOY.md](DEPLOY.md) for more deployment options.
+**Testing**
+- Vitest 4.0 for unit tests
+- Testing Library for component tests
+- Happy DOM for fast DOM testing
 
----
+## 🔑 Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Required: Your Google Gemini API key
+VITE_GEMINI_API_KEY=your_api_key_here
+```
+
+## 🎯 Keyboard Shortcuts
+
+- `Space` - Play/Pause simulation
+- `R` - Reset simulation
+- `C` - Clear all objects
+- `S` - Save simulation
+- `D` - Toggle debug mode
+
+## 📦 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm preview` | Preview production build |
+| `pnpm lint` | Run ESLint |
+| `pnpm type-check` | Run TypeScript checks |
+| `pnpm test` | Run test suite |
+| `pnpm test:ui` | Run tests with UI |
+| `pnpm test:coverage` | Generate coverage report |
 
 ## 🤝 Contributing
 
-Contributions welcome! 
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
----
-
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details
-
----
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **Matter.js** - Excellent 2D physics engine
-- **Google Gemini** - Powerful AI code generation  
-- **Vite** - Lightning-fast build tool
-- **Tailwind CSS** - Utility-first styling
+- [Matter.js](https://brm.io/matter-js/) - Physics engine
+- [Google Gemini](https://deepmind.google/technologies/gemini/) - AI model
+- [Radix UI](https://www.radix-ui.com/) - UI components
+- [Recharts](https://recharts.org/) - Data visualization
+
+## 🐛 Known Issues
+
+- Export feature currently in development
+- Debug mode placeholder needs implementation
+
+## 🗺️ Roadmap
+
+- [ ] Complete export functionality (PNG, GIF, Video)
+- [ ] Add dark/light theme toggle
+- [ ] Implement Web Workers for better performance
+- [ ] Multi-model AI support (Claude, GPT-4)
+- [ ] Collaboration features (share simulations)
+- [ ] Mobile app version
+
+## 📧 Contact
+
+**TattvaAI** - [GitHub](https://github.com/TattvaAI/Newton-AI)
 
 ---
 
-**⭐ Star this repo if you found it useful!**
-
-Built with ❤️ by [TattvaAI](https://github.com/TattvaAI)
+<p align="center">Made with ❤️ and ⚛️ physics</p>

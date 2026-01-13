@@ -1,16 +1,14 @@
-import type { PhysicsStats, GeminiModel } from '../types';
-import { GEMINI_MODELS } from '../types';
+import { memo } from 'react';
+import type { PhysicsStats } from '../types';
+import type Matter from 'matter-js';
 
 interface HUDProps {
   stats: PhysicsStats;
-  activeModel: GeminiModel;
+  engine: Matter.Engine | null;
 }
 
-export function HUD({ stats, activeModel }: HUDProps) {
-  const modelName = activeModel === 'pro' ? GEMINI_MODELS.PRO : GEMINI_MODELS.FLASH;
-  const modelColor = activeModel === 'pro' ? 'text-purple-400' : 'text-green-400';
-  const modelBadge = activeModel === 'pro' ? '(150/day)' : '(1K/day)';
-  const modelBadgeColor = activeModel === 'pro' ? 'text-purple-300/50' : 'text-green-300/50';
+export const HUD = memo(function HUD({ stats, engine }: HUDProps) {
+  const gravity = engine?.world.gravity.y.toFixed(1) || '1.0';
 
   return (
     <div className="absolute top-6 left-6 z-10 pointer-events-none">
@@ -18,16 +16,16 @@ export function HUD({ stats, activeModel }: HUDProps) {
         <div>OBJECTS: <span className="text-cyan-200">{stats.bodies}</span></div>
         <div>FPS: <span className="text-cyan-200">{stats.fps}</span></div>
         <div>CONSTRAINTS: <span className="text-cyan-200">{stats.constraints}</span></div>
-        <div>GRAVITY: Y=1.0</div>
-        <div className={`text-[10px] mt-1 font-bold uppercase ${modelColor}`}>
-          🤖 {modelName}
-          <span className={modelBadgeColor}> {modelBadge}</span>
+        <div>GRAVITY: Y=<span className="text-cyan-200">{gravity}</span></div>
+        <div className="text-[10px] mt-1 font-bold uppercase text-green-400">
+          🤖 Gemini 3 Flash
+          <span className="text-green-300/50"> (1K/day)</span>
         </div>
         <div className="text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-700/50">
           <div>SPACE: Pause/Play</div>
-          <div>R: Reset • D: Debug</div>
+          <div>M: Toggle Dashboard</div>
         </div>
       </div>
     </div>
   );
-}
+});

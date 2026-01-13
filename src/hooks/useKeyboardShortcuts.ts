@@ -3,15 +3,13 @@ import { SHORTCUTS } from '../constants';
 
 interface KeyboardShortcuts {
   onPause?: () => void;
-  onReset?: () => void;
-  onDebug?: () => void;
+  onToggleDashboard?: () => void;
   enabled?: boolean;
 }
 
 export function useKeyboardShortcuts({
   onPause,
-  onReset,
-  onDebug,
+  onToggleDashboard,
   enabled = true,
 }: KeyboardShortcuts) {
   useEffect(() => {
@@ -26,16 +24,13 @@ export function useKeyboardShortcuts({
       if (e.code === SHORTCUTS.PAUSE && !e.repeat) {
         e.preventDefault();
         onPause?.();
-      } else if (e.code === SHORTCUTS.RESET && !e.repeat) {
+      } else if ((e.key === 'm' || e.key === 'M') && !e.repeat) {
         e.preventDefault();
-        onReset?.();
-      } else if (e.code === SHORTCUTS.DEBUG && !e.repeat) {
-        e.preventDefault();
-        onDebug?.();
+        onToggleDashboard?.();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPause, onReset, onDebug, enabled]);
+  }, [onPause, onToggleDashboard, enabled]);
 }

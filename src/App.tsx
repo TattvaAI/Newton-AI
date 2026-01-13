@@ -1,31 +1,38 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Matter from 'matter-js';
+import { Activity } from 'lucide-react';
 import { SimulationCanvas } from './components/SimulationCanvas';
 import { InputBar } from './components/InputBar';
 import { Controls } from './components/Controls';
 import { HUD } from './components/HUD';
 import { ToastContainer } from './components/Toast';
 import { ObjectInspector } from './components/ObjectInspector';
-import { usePhysicsEngine, usePhysicsStats, useKeyboardShortcuts, useToast } from './hooks';
-import { geminiClient, clearDynamicBodies, executeSandboxCode, loadSavedSimulations, saveSimulations, type SavedSimulation } from './lib';
-import type { GeminiModel } from './types';
+import { usePhysicsEngine, usePhysicsStats, useKeyboardShortcuts, useToast, useSimulationController } from './hooks';
+import { loadSavedSimulations, saveSimulations, type SavedSimulation } from './lib';
+import { ObjectEditor } from './features/education/ObjectEditor';
+import { PhysicsDashboard } from './features/measurements/PhysicsDashboard';
 
 function App() {
   // Physics engine setup
-  const { engine, runner, render } = usePhysicsEngine();
+  const { engine, render } = usePhysicsEngine();
   const stats = usePhysicsStats(engine);
   const { toasts, addToast, removeToast } = useToast();
 
-  // Simulation state
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isDebug, setIsDebug] = useState(false);
-  const [activeModel, setActiveModel] = useState<GeminiModel>('pro');
+  // Simulation Controller
+  const {
+    isGenerating,
+    lastGeneratedCode,
+    hasSimulation,
+    actions: simActions
+  } = useSimulationController({ engine });
+
+  // UI State
   const [selectedBody, setSelectedBody] = useState<Matter.Body | null>(null);
-  const [lastGeneratedCode, setLastGeneratedCode] = useState<string | null>(null);
-  const [hasSimulation, setHasSimulation] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [showObjectEditor] = useState(true);
   const [savedSimulations, setSavedSimulations] = useState<SavedSimulation[]>(loadSavedSimulations);
   const [showSavedPanel, setShowSavedPanel] = useState(false);
+  const [initialEnergy, setInitialEnergy] = useState<number | null>(null);
 
   // Ref for accessing engine in async operations
   const engineRef = useRef(engine);
@@ -35,135 +42,65 @@ function App() {
   // ACTIONS
   // ============================================================================
 
-  const handleReset = useCallback(() => {
-    if (!engineRef.current) return;
-    clearDynamicBodies(engineRef.current);
-    setLastGeneratedCode(null);
-    setHasSimulation(false);
-    addToast('info', 'World Reset', 'All dynamic bodies cleared');
-  }, [addToast]);
-
-  const handlePause = useCallback(() => {
-    if (!runner) return;
-    runner.enabled = !runner.enabled;
-    setIsPaused(!runner.enabled);
-  }, [runner]);
-
-  const handleDebug = useCallback(() => {
-    if (!render) return;
-    const options = render.options;
-    options.wireframes = !options.wireframes;
-    options.showAngleIndicator = !options.showAngleIndicator;
-    setIsDebug(!!options.wireframes);
-  }, [render]);
-
-  const handleModelChange = useCallback((model: GeminiModel) => {
-    setActiveModel(model);
-    geminiClient.switchModel(model);
-    const modelName = model === 'pro' ? 'Gemini 3 Pro' : 'Gemini 3 Flash';
-    addToast('info', 'Model Switched', `Now using ${modelName}`);
-  }, [addToast]);
-
-  const handleGenerate = useCallback(async (prompt: string) => {
-    if (!engineRef.current) {
-      addToast('error', 'System Not Ready', 'Physics engine not initialized');
-      return;
-    }
-    
-    setIsGenerating(true);
-    addToast('info', 'Generating Physics...', `Creating: ${prompt.slice(0, 50)}${prompt.length > 50 ? '...' : ''}`);
-
-    try {
-      // Import the helper functions dynamically
-      const { generatePhysicsCode, fixPhysicsCode } = await import('./lib/ai/gemini');
-      
-      // Generate code using proper system prompt
-      const code = await generatePhysicsCode(prompt);
-      console.log('Generated code:', code);
-
-      // Execute in sandbox
-      let result = executeSandboxCode(code, engineRef.current);
-
-      // Self-healing: try to fix if failed
-      if (!result.success && result.error) {
-        addToast('info', 'Auto-Healing...', 'Attempting to fix the simulation');
-        console.warn('First attempt failed:', result.error);
-        
-        const fixedCode = await fixPhysicsCode(prompt, code, result.error);
-        console.log('Fixed code:', fixedCode);
-        result = executeSandboxCode(fixedCode, engineRef.current);
-
-        if (!result.success) {
-          throw new Error(`Self-repair failed: ${result.error}`);
-        } else {
-          setLastGeneratedCode(fixedCode);
-          setHasSimulation(true);
-          addToast('success', '✨ Self-Repair Successful', 'Simulation recovered automatically');
+  // Handle generation finished - update UI or initial energy
+  useEffect(() => {
+    if (hasSimulation && showDashboard) {
+      // Calculate initial energy after a brief delay to let physics settle
+      setTimeout(async () => {
+        if (engineRef.current) {
+          const { calculateSystemMeasurements } = await import('./lib/calculations/physics-math');
+          const groundY = render?.bounds.max.y || window.innerHeight;
+          const measurements = calculateSystemMeasurements(
+            engineRef.current.world.bodies,
+            groundY,
+            engineRef.current.world.gravity.y
+          );
+          setInitialEnergy(measurements.totalEnergy);
         }
-      } else {
-        setLastGeneratedCode(code);
-        setHasSimulation(true);
-        addToast('success', '🎉 Experiment Created', 'Physics simulation running');
-      }
-
-    } catch (error: any) {
-      addToast('error', 'Experiment Failed', error.message);
-    } finally {
-      setIsGenerating(false);
+      }, 100);
+    } else if (!hasSimulation) {
+      setShowDashboard(false);
+      setSelectedBody(null);
     }
-  }, [addToast]);
+  }, [hasSimulation, showDashboard, render]);
 
-  const handleReplay = useCallback(() => {
-    if (!engineRef.current || !lastGeneratedCode) return;
-    
-    // Clear current simulation
-    clearDynamicBodies(engineRef.current);
-    
-    // Re-execute the saved code
-    const result = executeSandboxCode(lastGeneratedCode, engineRef.current);
-    
-    if (result.success) {
-      addToast('success', '🔄 Replayed', 'Simulation restarted from scratch');
-    } else {
-      addToast('error', 'Replay Failed', result.error || 'Could not replay simulation');
+  // Auto-show dashboard when simulation is created
+  useEffect(() => {
+    if (hasSimulation && lastGeneratedCode) {
+      setShowDashboard(true);
     }
-  }, [lastGeneratedCode, addToast]);
+  }, [hasSimulation, lastGeneratedCode]);
 
   const handleSaveSimulation = useCallback(() => {
     if (!lastGeneratedCode) return;
-    
+
     const name = prompt('Enter a name for this simulation:', 'My Simulation');
     if (!name) return;
-    
+
     const newSimulation: SavedSimulation = {
       id: Date.now().toString(),
       name: name.trim(),
       code: lastGeneratedCode,
       timestamp: Date.now()
     };
-    
+
     const updated = [...savedSimulations, newSimulation];
     setSavedSimulations(updated);
     saveSimulations(updated);
-    
+
     addToast('success', '💾 Saved!', `"${name}" saved to your library`);
   }, [lastGeneratedCode, savedSimulations, addToast]);
 
   const handleLoadSimulation = useCallback((simulation: SavedSimulation) => {
-    if (!engineRef.current) return;
-    
-    clearDynamicBodies(engineRef.current);
-    const result = executeSandboxCode(simulation.code, engineRef.current);
-    
-    if (result.success) {
-      setLastGeneratedCode(simulation.code);
-      setHasSimulation(true);
+    const result = simActions.load(simulation.code);
+
+    if (result && result.success) {
       setShowSavedPanel(false);
       addToast('success', '📂 Loaded', `"${simulation.name}" loaded successfully`);
     } else {
-      addToast('error', 'Load Failed', result.error || 'Could not load simulation');
+      addToast('error', 'Load Failed', result?.error || 'Could not load simulation');
     }
-  }, [addToast]);
+  }, [simActions, addToast]);
 
   const handleDeleteSimulation = useCallback((id: string) => {
     const updated = savedSimulations.filter(sim => sim.id !== id);
@@ -172,11 +109,26 @@ function App() {
     addToast('info', 'Deleted', 'Simulation removed from library');
   }, [savedSimulations, addToast]);
 
+  const handleToggleDashboard = useCallback(() => {
+    setShowDashboard(prev => !prev);
+  }, []);
+
+  const handleCloseInspector = useCallback(() => {
+    setSelectedBody(null);
+  }, []);
+
+  const handleShowDashboard = useCallback(() => {
+    setShowDashboard(true);
+  }, []);
+
+  const handleToggleSavedPanel = useCallback(() => {
+    setShowSavedPanel(prev => !prev);
+  }, []);
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
-    onPause: handlePause,
-    onReset: handleReset,
-    onDebug: handleDebug,
+    onPause: simActions.replay,
+    onToggleDashboard: handleToggleDashboard,
   });
 
   // Object selection logic
@@ -217,41 +169,73 @@ function App() {
   // ============================================================================
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-slate-900 text-cyan-500 selection:bg-cyan-500/30">
+    <div className="relative w-full h-screen overflow-hidden bg-slate-950 text-slate-100 selection:bg-cyan-500/30">
       <SimulationCanvas />
 
-      <HUD stats={stats} activeModel={activeModel} />
+      <HUD stats={stats} engine={engine} />
 
       <Controls
-        onReset={handleReset}
-        onPause={handlePause}
-        isPaused={isPaused}
-        onDebug={handleDebug}
-        isDebug={isDebug}
-        activeModel={activeModel}
-        onModelChange={handleModelChange}
-        engine={engineRef.current}
+        onReset={simActions.reset}
+        onPause={simActions.replay}
+        isPaused={false}
+        engine={engine}
+        render={render}
+        lastGeneratedCode={lastGeneratedCode}
         savedSimulations={savedSimulations}
         onLoadSimulation={handleLoadSimulation}
         onDeleteSimulation={handleDeleteSimulation}
         showSavedPanel={showSavedPanel}
-        onToggleSavedPanel={() => setShowSavedPanel(!showSavedPanel)}
+        onToggleSavedPanel={handleToggleSavedPanel}
         canReplay={!!lastGeneratedCode}
-        onReplay={handleReplay}
+        onReplay={simActions.replay}
         onSave={handleSaveSimulation}
         hasSimulation={hasSimulation}
       />
 
       <InputBar
-        onGenerate={handleGenerate}
+        onGenerate={simActions.generate}
         isGenerating={isGenerating}
         hasSimulation={hasSimulation}
       />
 
-      <ObjectInspector
-        body={selectedBody}
-        onClose={() => setSelectedBody(null)}
-      />
+      {/* Show the new ObjectEditor instead of ObjectInspector when a body is selected */}
+      {selectedBody && showObjectEditor ? (
+        <ObjectEditor
+          body={selectedBody}
+          onClose={handleCloseInspector}
+        />
+      ) : (
+        selectedBody && (
+          <ObjectInspector
+            body={selectedBody}
+            onClose={handleCloseInspector}
+          />
+        )
+      )}
+
+      {showDashboard && hasSimulation && (
+        <div className="absolute bottom-20 left-6 w-96 max-h-[calc(100vh-200px)] overflow-y-auto animate-in fade-in slide-in-from-left-5 duration-300 z-20">
+          <PhysicsDashboard
+            engine={engine}
+            groundY={render?.bounds.max.y || window.innerHeight}
+            gravity={engine?.world.gravity.y || 1}
+            initialEnergy={initialEnergy || undefined}
+            selectedBody={selectedBody}
+          />
+        </div>
+      )}
+
+      {/* Dashboard Toggle Hint - only show when simulation exists */}
+      {hasSimulation && !showDashboard && (
+        <button
+          onClick={handleShowDashboard}
+          className="absolute bottom-6 left-6 p-3 bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400 rounded-xl border border-cyan-500/30 backdrop-blur transition-all hover:scale-105 z-10 flex items-center gap-2"
+          title="Show Physics Dashboard (M)"
+        >
+          <Activity className="w-5 h-5" />
+          <span className="text-xs font-semibold">Show Measurements</span>
+        </button>
+      )}
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 

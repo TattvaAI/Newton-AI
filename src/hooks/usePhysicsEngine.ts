@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { PhysicsEngineState } from '../types';
 import {
   createPhysicsEngine,
@@ -18,25 +18,33 @@ export function usePhysicsEngine(): PhysicsEngineState {
     render: null,
   });
 
+  // Use ref to track state for cleanup without triggering re-renders
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   // Initialize engine when canvas becomes available
   useEffect(() => {
     const checkCanvas = setInterval(() => {
       if (window.__PHYSICS_CANVAS_ELEMENT__) {
         clearInterval(checkCanvas);
-        
+
         const width = window.innerWidth;
         const height = window.innerHeight;
         const newState = createPhysicsEngine(window.__PHYSICS_CANVAS_ELEMENT__, width, height);
-        
+
         setState(newState);
       }
     }, 50);
 
     return () => {
       clearInterval(checkCanvas);
-      if (state.engine && state.runner && state.render) {
-        destroyPhysicsEngine(state);
+      if (stateRef.current.engine && stateRef.current.runner && stateRef.current.render) {
+        destroyPhysicsEngine(stateRef.current);
       }
+      // Clean up global reference
+      delete (window as { __PHYSICS_CANVAS_ELEMENT__?: HTMLElement }).__PHYSICS_CANVAS_ELEMENT__;
     };
   }, []); // Only run once on mount
 

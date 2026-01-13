@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Sparkles, Loader2, Orbit, Waves, Zap, Scale, CircleDot, Triangle } from 'lucide-react';
 
 interface InputBarProps {
@@ -47,7 +47,7 @@ const PRESETS = [
     }
 ];
 
-export const InputBar: React.FC<InputBarProps> = ({ 
+const InputBarComponent: React.FC<InputBarProps> = ({ 
     onGenerate, 
     isGenerating, 
     hasSimulation = false
@@ -140,3 +140,5 @@ export const InputBar: React.FC<InputBarProps> = ({
         </div>
     );
 };
+
+export const InputBar = memo(InputBarComponent);

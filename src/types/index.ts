@@ -4,10 +4,9 @@ import type Matter from 'matter-js';
 // AI MODELS
 // ============================================================================
 
-export type GeminiModel = 'pro' | 'flash';
+export type GeminiModel = 'flash';
 
 export const GEMINI_MODELS = {
-  PRO: 'gemini-3-pro-preview',
   FLASH: 'gemini-3-flash-preview',
 } as const;
 
@@ -35,7 +34,6 @@ export interface SimulationState {
   isRunning: boolean;
   isPaused: boolean;
   isDebugMode: boolean;
-  activeModel: GeminiModel;
 }
 
 export interface GenerationState {

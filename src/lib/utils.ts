@@ -11,67 +11,67 @@ export const generateId = (): string => uuidv4();
  */
 export const cleanGeneratedCode = (code: string): string => {
   let cleaned = code;
-  
+
   // Remove markdown code blocks (all variations)
   cleaned = cleaned.replace(/```(?:javascript|js|typescript|ts)?\s*/gi, '');
   cleaned = cleaned.replace(/```\s*/g, '');
-  
+
   // Remove common AI prefixes (case insensitive)
   cleaned = cleaned.replace(/^here'?s?\s*(the\s*)?(code|solution|implementation|answer)[:\s]*/im, '');
   cleaned = cleaned.replace(/^(the\s*)?code[:\s]*/im, '');
   cleaned = cleaned.replace(/^output[:\s]*/im, '');
-  cleaned = cleaned.replace(/^\s*[→\-]\s*/im, '');
-  
+  cleaned = cleaned.replace(/^\s*[→-]\s*/im, '');
+
   // Remove any standalone backticks (but preserve template literals)
   cleaned = cleaned.replace(/^`+$/gm, '');
-  
+
   // Remove common explanation patterns at start
   cleaned = cleaned.replace(/^(certainly|sure|of course|okay)[!,.]?\s*/im, '');
-  
+
   // Remove "Here is..." patterns
   cleaned = cleaned.replace(/^here\s+(is|are)\s+.{0,50}?[:\n]/im, '');
-  
+
   // Trim and ensure no leading/trailing whitespace issues
   cleaned = cleaned.trim();
-  
+
   // If the code starts with explanatory text before actual code, try to extract just the code
   const lines = cleaned.split('\n');
   let codeStartIndex = 0;
-  
+
   // Find where actual code starts (usually with const, let, var, for, if, etc.)
   for (let i = 0; i < Math.min(10, lines.length); i++) {
     const line = lines[i].trim();
-    if (line && (line.startsWith('const ') || line.startsWith('let ') || 
-                 line.startsWith('var ') || line.startsWith('for ') || 
-                 line.startsWith('if ') || line.startsWith('function ') ||
-                 line.startsWith('//') || line.includes('Bodies.') || 
-                 line.includes('Composite.') || line.includes('World.'))) {
+    if (line && (line.startsWith('const ') || line.startsWith('let ') ||
+      line.startsWith('var ') || line.startsWith('for ') ||
+      line.startsWith('if ') || line.startsWith('function ') ||
+      line.startsWith('//') || line.includes('Bodies.') ||
+      line.includes('Composite.') || line.includes('World.'))) {
       codeStartIndex = i;
       break;
     }
   }
-  
+
   if (codeStartIndex > 0) {
     cleaned = lines.slice(codeStartIndex).join('\n');
   }
-  
+
   // Final validation - ensure it looks like JavaScript
   if (cleaned && !cleaned.match(/^(const|let|var|for|if|function|\s*\/\/)/)) {
     logger.warn('Cleaned code doesn\'t start with valid JavaScript:', cleaned.substring(0, 100));
   }
-  
+
   return cleaned;
 };
 
 /**
  * Debounce function calls
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
   let timeout: ReturnType<typeof setTimeout>;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -81,12 +81,12 @@ export const debounce = <T extends (...args: any[]) => any>(
 /**
  * Throttle function calls
  */
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {
   let inThrottle: boolean;
-  
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
@@ -135,3 +135,14 @@ export const safeJSONParse = <T>(json: string, fallback: T): T => {
     return fallback;
   }
 };
+
+/**
+ * Utility for merging class names (for Tailwind CSS)
+ * Used by shadcn/ui components
+ */
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
